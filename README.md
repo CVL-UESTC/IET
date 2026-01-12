@@ -23,7 +23,7 @@ Single Image Super-Resolution is a classic computer vision problem that aims to 
 
 <p align="center">
   <a href="">
-    <img src="figures/IDESplat_m.png" alt="the Overview Architecture of Individualized Exploratory Attention (IEA)" width="100%">
+    <img src="figures/attention.png" alt="the Overview Architecture of Individualized Exploratory Attention (IEA)" width="100%">
   </a>
 </p>
 
