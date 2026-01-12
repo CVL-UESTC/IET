@@ -1,15 +1,9 @@
 <p align="center">
   <h1 align="center">From Local Windows to Adaptive Candidates via Individualized Exploratory: Rethinking Attention for Image Super-Resolution</h1>
   <p align="center">
+    <a href="https://openreview.net/profile?id=%7EChunyu_Meng5">Chunyu Meng</a>
+    ·
     <a href="https://scholar.google.com/citations?user=CsVTBJoAAAAJ&hl=zh-CN">Wei Long</a>
-    ·
-    <a href="https://scholar.google.com/citations?user=rvVphXoAAAAJ&hl=zh-CN&oi=ao">Haifeng Wu</a>
-    ·
-    <a href="https://openreview.net/profile?id=~Shiyin_Jiang1">Shiyin Jiang</a>
-    ·
-    <a href="https://scholar.google.com/citations?user=tyYxiXoAAAAJ&hl=zh-CN">Jinhua Zhang</a>
-    ·
-    <a href="https://openreview.net/profile?id=~Xinchun_Ji2">Xinchun Ji</a>
     ·
     <a href="https://scholar.google.com/citations?user=-kSTt40AAAAJ&hl=zh-CN">Shuhang Gu</a>
   </p>
@@ -19,8 +13,6 @@
 [//]: # (  <h3 align="center">)
 [//]: # (  </h3>)
 </p>
-
-[![arXiv](https://img.shields.io/badge/Arxiv-2601.03824-AD1C18.svg?logo=arXiv)](https://arxiv.org/abs/2601.03824)
 
 ## Aabstract
 
