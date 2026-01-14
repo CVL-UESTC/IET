@@ -14,6 +14,8 @@
 [//]: # (  </h3>)
 </p>
 
+[![arXiv](https://img.shields.io/badge/Arxiv-2601.03824-AD1C18.svg?logo=arXiv)](https://arxiv.org/abs/2601.08341)
+
 ## Abstract
 
 <p align="left">
