@@ -1,11 +1,10 @@
 '''
-An official Pytorch impl of `Transcending the Limit of Local Window:
-IET for single image super-resolution`.
+An official Pytorch impl of `From Local Windows to Adaptive Candidates via Individualized Exploratory:
+Rethinking Attention for Image Super-Resolution`.
 
-Arxiv: 'https://arxiv.org/abs/2401.08209'
+Arxiv: 'https://arxiv.org/abs/2601.08341'
 '''
 
-import time
 import math
 import os
 import numpy as np
@@ -18,8 +17,6 @@ from fairscale.nn import checkpoint_wrapper
 from natten.functional import na2d_qk, na2d_av, na2d
 from torch.autograd import Function
 from torch.autograd.function import once_differentiable
-import gc
-from PIL import Image, ImageDraw
 from basicsr.utils.registry import ARCH_REGISTRY
 import smm_cuda
 
@@ -299,11 +296,6 @@ def merge_and_pad(idx: torch.LongTensor, prop_idx: torch.LongTensor, K3: int):
     # Sort before deduplication.
     sorted_vals = combined.sort(dim=1)[0]
 
-    # if N > 120000:
-    #     del combined
-    #     gc.collect()
-    #     torch.cuda.empty_cache()
-
     uniq_mask = torch.ones_like(sorted_vals, dtype=torch.bool)
     uniq_mask[:, 1:] = sorted_vals[:, 1:] != sorted_vals[:, :-1]
 
@@ -318,7 +310,7 @@ def merge_and_pad(idx: torch.LongTensor, prop_idx: torch.LongTensor, K3: int):
 
 
 
-class IndexAttention(nn.Module):
+class IEA(nn.Module):
     r"""
     Shifted Window-based Multi-head Self-Attention
 
@@ -476,15 +468,6 @@ class IndexAttention(nn.Module):
 
         # propagation
         if self.is_last and self.topk_prop_3 > 0:
-            # only for inference
-            if n > 120000:
-                if topk == lr2 + sr2:
-                    del qkv, q, k, v, v_lepe, attn, attn_dense, attn_sparse, x_dense, x_sparse
-                else:
-                    del qkv, q, k, v, v_lepe, attn
-                gc.collect()
-                torch.cuda.empty_cache()
-
             with torch.no_grad():
                 _, topk_prop_1_idx = torch.topk(params['attn'], k=self.topk_prop_1, dim=-1, largest=True, sorted=True)  # b*h, n, topk_prop_1
                 topk_prop_1_idx = torch.gather(params['idx'], dim=2, index=topk_prop_1_idx)  # (b*h, n, topk_prop_1)
@@ -592,7 +575,6 @@ class IETTransformerLayer(nn.Module):
         self.dim = dim
         self.input_resolution = input_resolution
         self.num_heads = num_heads
-        self.local_range = local_range
         self.mlp_ratio = mlp_ratio
         self.convffn_kernel_size = convffn_kernel_size
         self.softmax = nn.Softmax(dim=-1)
@@ -608,9 +590,9 @@ class IETTransformerLayer(nn.Module):
 
         self.v_LePE = dwconv(hidden_features=self.nattn_dim, kernel_size=convffn_kernel_size)
 
-        self.attn_win = IndexAttention(
+        self.attn_win = IEA(
             self.dim,
-            local_range=self.local_range,
+            local_range=local_range,
             sparse_range=sparse_range,
             num_heads=num_heads,
             dilation=dilation,
@@ -1402,31 +1384,39 @@ class IET(nn.Module):
 
 
 if __name__ == '__main__':
-    upscale = 4
-
     model = IET(
-        upscale=4,
-        img_size=64,
-        embed_dim=210,
-        depths=[6, 6, 6, 6, 6, 6, ],
-        num_heads=[6, 6, 6, 6, 6, 6, ],
-        window_size=16,
-        category_size=128,
-        num_tokens=128,
-        reducted_dim=20,
-        convffn_kernel_size=5,
-        img_range=1.,
-        down_c=20,
-        mlp_ratio=2,
-        upsampler='pixelshuffle')
+            upscale=2,
+            img_size=64,
+            embed_dim=240,
+            topk_focus=[[914, 914, 225, 225],
+                        [345, 225, 225, 125],
+                        [225, 125, 125, 125],
+                        [185, 81, 81, 81],
+                        [121, 81, 81, 81],
+                        [64, 64, 64, 64],
+                        [36, 36, 36, 36],
+                        [24, 24, 24, 24]],
+            topk_prop_1=[22, 20, 14, 12, 0, 0, 0, 0],
+            topk_prop_2=[12, 11, 9, 8, 0, 0, 0, 0],
+            topk_prop_3=[120, 100, 60, 40, 0, 0, 0, 0],
+            depths=[4, 4, 4, 4, 4, 4, 4, 4,],
+            num_heads=6,
+            local_range=17,
+            sparse_range=25,
+            dilation=2,
+            convffn_kernel_size=5,
+            img_range=1.,
+            mlp_ratio=2,
+            upsampler='pixelshuffle')
 
     # Model Size
     total = sum([param.nelement() for param in model.parameters()])
-    print("Number of parameter: %.3fM" % (total / 1e6))
-    print(128, 128, model.flops([128, 128]) / 1e9, 'G')
-    print(256, 256, model.flops([256, 256]) / 1e9, 'G')
+    print("Params: %.1fM" % (total / 1e6))
+    # print(model.flops([320, 180]) / 1e12, 'T')
+    # print(model.flops([426, 240]) / 1e12, 'T')
+    print('FLOPs: %.2fT' % (model.flops([640, 360]) / 1e12))
 
     # Test
-    _input = torch.randn([2, 3, 64, 64])
-    output = model(_input)
+    # _input = torch.randn([2, 3, 64, 64])
+    # output = model(_input)
     # print(output.shape)
