@@ -1,0 +1,11 @@
+fairscale
+lmdb
+muon-optimizer
+numpy>=1.17
+opencv-python
+pillow
+PyYAML
+scipy
+torch==2.5.0
+torchvision
+tqdm
