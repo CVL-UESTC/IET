@@ -423,7 +423,6 @@ class IEA(nn.Module):
 
             q = q.reshape(b * self.num_heads, n, c // self.num_heads)
             k = k.reshape(b * self.num_heads, n, c // self.num_heads)
-            k = k.transpose(-2, -1)
 
             smm_index = params['idx'].int().contiguous()
             attn = SMM_QmK.apply(q, k, smm_index)  # b * self.num_heads, n, topk
